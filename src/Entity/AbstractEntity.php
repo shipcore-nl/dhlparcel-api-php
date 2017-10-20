@@ -49,6 +49,51 @@ abstract class AbstractEntity implements \JsonSerializable
         return $accessibleAnnotation;
     }
     
+    /**
+     * Returns array type with stripped []
+     * @param string $type
+     * @return string
+     */
+    private function getArrayItemsType($type)
+    {
+        return substr($type, 0, strlen($type) - 2);
+    }
+    
+    /**
+     * Returns raw string type format from the var annotation
+     * @param \ReflectionProperty $property
+     * @return string
+     */
+    private function getRawType(\ReflectionProperty $property)
+    {
+        $matches = [];
+        if (preg_match('/@var\s+([^\s]+)/', $property->getDocComment(), $matches)) {
+            list(, $rawType) = $matches;
+        } else {
+            throw new \ShipCore\DHLParcel\Exception\UnkownTypeException(
+                get_class($this),
+                $property->getName()
+            );
+        }
+        return $rawType;
+    }
+    
+    /**
+     *
+     * @param string $rawType
+     * @return bool
+     */
+    private function isArrayType($rawType)
+    {
+        return substr($rawType, -2) == "[]";
+    }
+    
+    /**
+     *
+     * @param \ReflectionProperty $property
+     * @return string
+     * @throws \ShipCore\DHLParcel\Exception\UnkownTypeException
+     */
     private function getType(\ReflectionProperty $property)
     {
         $docReader = self::getDocReader();
@@ -57,16 +102,44 @@ abstract class AbstractEntity implements \JsonSerializable
             return $docReader->getPropertyClass($property);
         }
         
-        $matches = [];
-        if (preg_match('/@var\s+([^\s]+)/', $property->getDocComment(), $matches)) {
-            list(, $primitiveType) = $matches;
-            return $primitiveType;
-        } else {
-            throw new \ShipCore\DHLParcel\Exception\UnkownTypeException(
-                get_class($this),
-                $property->getName()
+        return $this->getRawType($property);
+    }
+    
+    /**
+     *
+     * @param \ReflectionProperty $property
+     * @param string $type
+     * @param mixed $value
+     */
+    private function parseArrayType(\ReflectionProperty $property, $type, $value)
+    {
+        if (!is_array($value)) {
+            throw new \ShipCore\DHLParcel\Exception\InvalidTypeException(
+                    get_class($this),
+                    $property->getName(),
+                    $this->getType($property)
             );
         }
+        $itemType = $this->getArrayItemsType($type);
+        $items = [];
+        foreach ($value as $item) {
+            if (
+                (class_exists($itemType) || interface_exists($itemType))
+                && is_array($item)
+                && is_subclass_of($itemType, \ShipCore\DHLParcel\Entity\AbstractEntity::class)
+            ) {
+                $item = new $itemType($item);
+            }
+            if (!$this->checkType($itemType, $item)) {
+                throw new \ShipCore\DHLParcel\Exception\InvalidTypeException(
+                    get_class($this),
+                    $property->getName(),
+                    $this->getType($property)
+                );
+            }
+            $items[] = $item;
+        }
+        return $items;
     }
     
     private function checkType($type, $value)
@@ -94,19 +167,25 @@ abstract class AbstractEntity implements \JsonSerializable
         $property = $reflectionClass->getProperty($propertyName);
         if ($property && $this->canAccess($property)) {
             $propertyClass = self::getDocReader()->getPropertyClass($property);
-            if ($propertyClass && is_array($value)) {
-                $value = new $propertyClass($value);
-            }
             
-            if ($this->checkType($this->getType($property), $value)) {
+            $rawType = $this->getRawType($property);
+            if ($this->isArrayType($rawType)) {
+                $valueArray = $this->parseArrayType($property, $rawType, $value);
+                $property->setAccessible(true);
+                $property->setValue($this, $valueArray);
+            } else {
+                if ($propertyClass && is_array($value) && is_subclass_of($rawType, \ShipCore\DHLParcel\Entity\AbstractEntity::class)) {
+                    $value = new $propertyClass($value);
+                }
+                if (!$this->checkType($this->getType($property), $value)) {
+                    throw new \ShipCore\DHLParcel\Exception\InvalidTypeException(
+                        get_class($this),
+                        $property->getName(),
+                        $this->getType($property)
+                    );
+                }
                 $property->setAccessible(true);
                 $property->setValue($this, $value);
-            } else {
-                throw new \ShipCore\DHLParcel\Exception\InvalidTypeException(
-                    get_class($this),
-                    $property->getName(),
-                    $this->getType($property)
-                );
             }
         }
     }
@@ -120,7 +199,7 @@ abstract class AbstractEntity implements \JsonSerializable
     {
         $className = static::class;
         $reflectionClass = new \ReflectionClass($className);
-        return $reflectionClass->hasProperty($propertyName);
+        return ($reflectionClass->hasProperty($propertyName) && $this->canAccess($reflectionClass->getProperty($propertyName)));
     }
     
     private function getProperty($propertyName)
