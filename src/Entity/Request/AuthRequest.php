@@ -1,7 +1,20 @@
 <?php
 namespace ShipCore\DHLParcel\Entity\Request;
 
-class AuthRefreshRequest extends AbstractEntity
+use ShipCore\DHLParcel\Entity\AbstractEntity;
+
+class AuthRequest extends AbstractEntity
 {
-    protected $refreshToken;
+    
+    /**
+     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @var string
+     */
+    protected $userId;
+    
+    /**
+     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @var string
+     */
+    protected $key;
 }

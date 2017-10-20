@@ -3,8 +3,20 @@ namespace ShipCore\DHLParcel\Entity;
 
 class Address extends AbstractEntity
 {
-    protected $street;
     
+    /**
+     *
+     * @ShipCore\DHLParcel\Annotation\Required()
+     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @var string
+     */
+    protected $street;
+
+    /**
+     *
+     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @var string
+     */
     protected $number;
     
     protected $addition;

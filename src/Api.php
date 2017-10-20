@@ -2,10 +2,12 @@
 namespace ShipCore\DHLParcel;
 
 use ShipCore\DHLParcel\Http\Client as HttpClient;
+use ShipCore\DHLParcel\Http\Response;
 use ShipCore\DHLParcel\Entity\Request\AuthRequest;
 use ShipCore\DHLParcel\Entity\Request\AuthRefreshRequest;
 use ShipCore\DHLParcel\Entity\Request\CreateLabelRequest;
 use ShipCore\DHLParcel\Entity\Label;
+use ShipCore\DHLParcel\Entity\Token;
 
 class Api
 {
@@ -56,10 +58,27 @@ class Api
         ];
     }
     
-    protected function getResponseData($response)
+    /**
+     *
+     * @param Response $response
+     * @throws \ShipCore\DHLParcel\Exception\RequestException
+     */
+    private function validateResponse(Response $response)
     {
-        // TODO validate response
-        return json_decode($response[0], true);
+        if ((int) $response->getResponseCode() / 100 != 2) {
+            throw new \ShipCore\DHLParcel\Exception\RequestException("", $response);
+        }
+    }
+    
+    /**
+     *
+     * @param Response $response
+     * @return mixed
+     */
+    protected function getResponseData(Response $response)
+    {
+        $this->validateResponse($response);
+        return json_decode($response->getResponseBody(), true);
     }
         
     protected function authenticate()
