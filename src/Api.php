@@ -52,9 +52,9 @@ class Api
     protected function getDefaultHeaders()
     {
         return [
+            'Authorization: Bearer ' . trim($this->token->getAccessToken()),
             'Content-Type: application/json',
-            'Accept: application/json',
-            'Authorization: Bearer ' . $this->token->getAccessToken()
+            'Accept: application/json'
         ];
     }
     

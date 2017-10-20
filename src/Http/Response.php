@@ -11,7 +11,7 @@ class Response
     
     /**
      *
-     * @var string
+     * @var string[]
      */
     protected $responseHeaders;
     
@@ -23,7 +23,7 @@ class Response
     
     /**
      *
-     * @var string
+     * @var string[]
      */
     protected $requestHeaders;
     

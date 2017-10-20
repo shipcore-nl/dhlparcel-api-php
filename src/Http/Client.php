@@ -30,17 +30,17 @@ class Client
             
             return new Response(
                 $headers,
-                $body,
+                print_r($body, true),
                 $response->getHeaders(),
-                $response->getBody()->getContents(),
+                (string) $response->getBody(),
                 $response->getStatusCode()
             );
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             return new Response(
                 $e->getRequest()->getHeaders(),
-                $e->getRequest()->getBody()->getContents(),
+                (string) $e->getRequest()->getBody(),
                 $e->getResponse()->getHeaders(),
-                $e->getResponse()->getBody()->getContents(),
+                (string) $e->getResponse()->getBody(),
                 $e->getResponse()->getStatusCode()
             );
         }

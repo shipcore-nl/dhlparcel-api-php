@@ -7,7 +7,7 @@ class Contact extends AbstractEntity
      *
      * @ShipCore\DHLParcel\Annotation\Required()
      * @ShipCore\DHLParcel\Annotation\Accessible()
-     * @var string
+     * @var \ShipCore\DHLParcel\Entity\Name
      */
     protected $name;
     
