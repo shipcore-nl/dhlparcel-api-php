@@ -1,28 +1,31 @@
 <?php
-namespace ShipCore\DHLParcel\Entity;
+namespace ShipCore\DHLParcel\Entity\Authenticate\Response;
 
-class Token extends AbstractEntity
+use ShipCore\DataObject\DataObject;
+use ShipCore\DataObject\Annotation\Accessible;
+
+class Token extends DataObject
 {
     /**
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var string
      */
     protected $accessToken;
     
     /**
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var integer
      */
     protected $accessTokenExpiration;
     
     /**
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var string
      */
     protected $refreshToken;
     
     /**
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var integer
      */
     protected $refreshTokenExpiration;

@@ -17,7 +17,7 @@ class Client
     
     public static function instance()
     {
-        return  new Client();
+        return new self();
     }
     
     public function request($method, $url, $headers = [], $body = null)
@@ -29,14 +29,18 @@ class Client
             ]);
             
             return new Response(
+                $method,
+                $url,
                 $headers,
-                print_r($body, true),
+                json_encode($body, JSON_PRETTY_PRINT),
                 $response->getHeaders(),
                 (string) $response->getBody(),
                 $response->getStatusCode()
             );
         } catch (\GuzzleHttp\Exception\ClientException $e) {
             return new Response(
+                $method,
+                $url,
                 $e->getRequest()->getHeaders(),
                 (string) $e->getRequest()->getBody(),
                 $e->getResponse()->getHeaders(),

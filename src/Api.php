@@ -3,11 +3,12 @@ namespace ShipCore\DHLParcel;
 
 use ShipCore\DHLParcel\Http\Client as HttpClient;
 use ShipCore\DHLParcel\Http\Response;
-use ShipCore\DHLParcel\Entity\Request\AuthRequest;
-use ShipCore\DHLParcel\Entity\Request\AuthRefreshRequest;
-use ShipCore\DHLParcel\Entity\Request\CreateLabelRequest;
-use ShipCore\DHLParcel\Entity\Label;
-use ShipCore\DHLParcel\Entity\Token;
+use ShipCore\DHLParcel\Exception\ApiException;
+use ShipCore\DHLParcel\Entity\Authenticate\Request\ApiKeyCredentials;
+use ShipCore\DHLParcel\Entity\Authenticate\Request\RefreshTokenCredentials;
+use ShipCore\DHLParcel\Entity\Labels\Request\LabelSpecification;
+use ShipCore\DHLParcel\Entity\Labels\Response\Label;
+use ShipCore\DHLParcel\Entity\Authenticate\Response\Token;
 
 class Api
 {
@@ -35,7 +36,6 @@ class Api
         $this->sandbox = $sandbox;
         
         $this->httpClient = HttpClient::instance();
-        $this->authenticate();
     }
     
     protected function isTokenValid($expirationTime)
@@ -49,24 +49,31 @@ class Api
         return ($this->sandbox ? self::BASE_URL_ACCEPT : self::BASE_URL) . $path;
     }
     
-    protected function getDefaultHeaders()
+    protected function getDefaultHeaders($sendToken = true)
     {
-        return [
-            'Authorization: Bearer ' . trim($this->token->getAccessToken()),
-            'Content-Type: application/json',
-            'Accept: application/json'
+        $headers = [
+            'Content-Type' => 'application/json',
+            'Accept' => 'application/json'
         ];
+        
+        if ($sendToken) {
+            $this->authenticate();
+            $headers['Authorization'] = 'Bearer ' . trim($this->token->getAccessToken());
+        }
+        return $headers;
     }
     
     /**
      *
      * @param Response $response
-     * @throws \ShipCore\DHLParcel\Exception\RequestException
+     * @throws ApiException
      */
     private function validateResponse(Response $response)
     {
-        if ((int) $response->getResponseCode() / 100 != 2) {
-            throw new \ShipCore\DHLParcel\Exception\RequestException("", $response);
+        $responseCode = intval($response->getResponseCode());
+        
+        if ($responseCode >= 300) {
+            throw new ApiException("", $response);
         }
     }
     
@@ -87,35 +94,35 @@ class Api
             if ($this->isTokenValid($this->token->getAccessTokenExpiration())) {
                 return;
             } elseif ($this->isTokenValid($this->token->getRefreshTokenExpiration())) {
-                $refreshRequest = new AuthRefreshRequest([
+                $refreshTokenCredentials = new RefreshTokenCredentials([
                    'refreshToken' => $this->token->getRefreshToken()
                 ]);
                 
                 $response = $this->httpClient->post(
                     $this->getUrl('authenticate/refresh-token'),
-                    null,
-                    $refreshRequest->jsonSerialize()
-                    );
-        
-                $this->token = Token::jsonDeserialize($this->getResponseData($response));
+                    $this->getDefaultHeaders(false),
+                    $refreshTokenCredentials->toDataArray()
+                );
+                        
+                $this->token = Token::fromDataArray($this->getResponseData($response));
                 $this->isTokenChanged = true;
                 
                 return;
             }
         }
         
-        $authRequest = new AuthRequest([
+        $apiKeyCredentials = new ApiKeyCredentials([
             'userId' => $this->userId,
             'key' => $this->key
         ]);
-        
+          
         $response = $this->httpClient->post(
             $this->getUrl('authenticate/api-key'),
-            null,
-            $authRequest->jsonSerialize()
+            $this->getDefaultHeaders(false),
+            $apiKeyCredentials->toDataArray()
             );
-        
-        $this->token = Token::jsonDeserialize($this->getResponseData($response));
+
+        $this->token = Token::fromDataArray($this->getResponseData($response));
         $this->isTokenChanged = true;
     }
     
@@ -144,25 +151,34 @@ class Api
         throw new \Exception('Not implemented');
     }
     
-    // returns array of LabelResponse (without pdf)
+    /**
+     * @param array $query
+     * @return Label[]
+     */
     public function getLabels($query)
     {
         throw new \Exception('Not implemented');
     }
     
-    // returns Label
-    public function createLabel(CreateLabelRequest $labelRequest)
+    /**
+     * @param LabelSpecification $labelSpecification
+     * @return Label
+     */
+    public function createLabel(LabelSpecification $labelSpecification)
     {
         $response = $this->httpClient->post(
             $this->getUrl('labels'),
             $this->getDefaultHeaders(),
-            $labelRequest->jsonSerialize()
+            $labelSpecification->toDataArray()
             );
-        
-        return Label::jsonDeserialize($this->getResponseData($response));
+                
+        return Label::fromDataArray($this->getResponseData($response));
     }
 
-    // returns Label
+    /**
+     * @param string $id
+     * @return Label
+     */
     public function getLabel($id)
     {
         $response = $this->httpClient->get(
@@ -170,7 +186,7 @@ class Api
             $this->getDefaultHeaders()
             );
         
-        return Label::jsonDeserialize($this->getResponseData($response));
+        return Label::fromDataArray($this->getResponseData($response));
     }
     
     public function getParcelTypes($senderType, $fromCountry, $query = [])

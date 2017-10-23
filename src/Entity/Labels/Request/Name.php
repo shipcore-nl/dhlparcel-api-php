@@ -1,33 +1,36 @@
 <?php
-namespace ShipCore\DHLParcel\Entity;
+namespace ShipCore\DHLParcel\Entity\Labels\Request;
 
-class Name extends AbstractEntity
+use ShipCore\DataObject\DataObject;
+use ShipCore\DataObject\Annotation\Accessible;
+
+class Name extends DataObject
 {
     
     /**
      *
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var string
      */
     protected $firstName;
 
     /**
      *
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var string
      */
     protected $lastName;
 
     /**
      *
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var string
      */
     protected $companyName;
 
     /**
      *
-     * @ShipCore\DHLParcel\Annotation\Accessible()
+     * @Accessible()
      * @var string
      */
     protected $additionalName;

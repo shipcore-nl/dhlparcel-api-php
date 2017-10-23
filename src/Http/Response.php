@@ -7,6 +7,29 @@ class Response
      *
      * @var string
      */
+    protected $method;
+
+    /**
+     *
+     * @var string
+     */
+    protected $url;
+    /**
+     *
+     * @var string[]
+     */
+    protected $requestHeaders;
+    
+    /**
+     *
+     * @var string
+     */
+    protected $requestBody;
+    
+    /**
+     *
+     * @var string
+     */
     protected $responseCode;
     
     /**
@@ -21,30 +44,42 @@ class Response
      */
     protected $responseBody;
     
-    /**
-     *
-     * @var string[]
-     */
-    protected $requestHeaders;
-    
-    /**
-     *
-     * @var string
-     */
-    protected $requestBody;
-    
     public function __construct(
+        $method,
+        $url,
         $requestHeaders,
         $requestBody,
         $responseHeaders,
         $responseBody,
         $responseCode
     ) {
+        $this->method = $method;
+        $this->url = $url;
         $this->requestHeaders = $requestHeaders;
         $this->requestBody = $requestBody;
         $this->responseHeaders = $responseHeaders;
         $this->responseBody = $responseBody;
         $this->responseCode = $responseCode;
+    }
+    
+    public function getMethod()
+    {
+        return $this->method;
+    }
+    
+    public function getUrl()
+    {
+        return $this->url;
+    }
+    
+    public function getRequestHeaders()
+    {
+        return $this->requestHeaders;
+    }
+
+    public function getRequestBody()
+    {
+        return $this->requestBody;
     }
     
     public function getResponseCode()
@@ -60,15 +95,5 @@ class Response
     public function getResponseBody()
     {
         return $this->responseBody;
-    }
-
-    public function getRequestHeaders()
-    {
-        return $this->requestHeaders;
-    }
-
-    public function getRequestBody()
-    {
-        return $this->requestBody;
     }
 }

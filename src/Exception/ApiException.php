@@ -3,9 +3,8 @@ namespace ShipCore\DHLParcel\Exception;
 
 use ShipCore\DHLParcel\Http\Response;
 
-class RequestException extends \Exception
+class ApiException extends \Exception
 {
-    
     /**
      * @var Response
      */
@@ -13,6 +12,8 @@ class RequestException extends \Exception
     
     public function __construct($message, Response $response, \Throwable $previous = null)
     {
+        print_r($response);
+        
         $this->response = $response;
         parent::__construct($message, 0, $previous);
     }
