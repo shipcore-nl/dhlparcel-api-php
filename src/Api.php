@@ -17,6 +17,8 @@ use ShipCore\DHLParcel\Entity\Products\Response\Product;
 use ShipCore\DHLParcel\Entity\ShipmentOptions\Response\ShipmentOption;
 use ShipCore\DHLParcel\Entity\Capabilities\Request\CapabilityQuery;
 use ShipCore\DHLParcel\Entity\Capabilities\Response\Capability;
+use ShipCore\DHLParcel\Entity\TimeWindows\Request\TimeWindowQuery;
+use ShipCore\DHLParcel\Entity\TimeWindows\Response\TimeWindow;
 
 class Api
 {
@@ -77,7 +79,6 @@ class Api
     }
     
     /**
-     *
      * @param Response $response
      * @throws ApiException
      */
@@ -91,7 +92,6 @@ class Api
     }
     
     /**
-     *
      * @param Response $response
      *
      * @return mixed
@@ -145,6 +145,12 @@ class Api
         return $this->isTokenChanged ? $this->token : null;
     }
     
+    /**
+     * @param string $senderType
+     * @param CapabilityQuery $capabilityQuery
+     *
+     * @return Capability[]
+     */
     public function getCapabilities($senderType, CapabilityQuery $capabilityQuery = null)
     {
         $response = $this->httpClient->get(
@@ -293,6 +299,11 @@ class Api
         return Product::fromDataArray($this->getResponseData($response));
     }
     
+    /**
+     * @param string $senderType
+     *
+     * @return ShipmentOption[]
+     */
     public function getShipmentOptions($senderType)
     {
         $response = $this->httpClient->get(
@@ -309,8 +320,24 @@ class Api
         return $shipmentOptions;
     }
     
-    public function getTimeWindows($query =[])
+    /**
+     * @param TimeWindowQuery $timeWindowQuery
+     *
+     * @return TimeWindow[]
+     */
+    public function getTimeWindows(TimeWindowQuery $timeWindowQuery = null)
     {
-        throw new \Exception('Not implemented');
+        $response = $this->httpClient->get(
+            $this->getUrl("time-windows", $timeWindowQuery ? $timeWindowQuery->toDataArray() : []),
+            $this->getDefaultHeaders()
+            );
+        
+        $timeWindows = [];
+        
+        foreach ($this->getResponseData($response) as $timeWindowData) {
+            $timeWindows[] = TimeWindow::fromDataArray($timeWindowData);
+        }
+        
+        return $timeWindows;
     }
 }
