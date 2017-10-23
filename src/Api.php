@@ -6,9 +6,14 @@ use ShipCore\DHLParcel\Http\Response;
 use ShipCore\DHLParcel\Exception\ApiException;
 use ShipCore\DHLParcel\Entity\Authenticate\Request\ApiKeyCredentials;
 use ShipCore\DHLParcel\Entity\Authenticate\Request\RefreshTokenCredentials;
+use ShipCore\DHLParcel\Entity\Labels\Request\LabelQuery;
 use ShipCore\DHLParcel\Entity\Labels\Request\LabelSpecification;
 use ShipCore\DHLParcel\Entity\Labels\Response\Label;
 use ShipCore\DHLParcel\Entity\Authenticate\Response\Token;
+use ShipCore\DHLParcel\Entity\ParcelTypes\Request\ParcelQuery;
+use ShipCore\DHLParcel\Entity\ParcelTypes\Response\ParcelType;
+use ShipCore\DHLParcel\Entity\Products\Request\ProductQuery;
+use ShipCore\DHLParcel\Entity\Products\Response\Product;
 
 class Api
 {
@@ -45,8 +50,12 @@ class Api
     
     protected function getUrl($path, $query = [])
     {
-        // TODO add query to url
-        return ($this->sandbox ? self::BASE_URL_ACCEPT : self::BASE_URL) . $path;
+        $url = ($this->sandbox ? self::BASE_URL_ACCEPT : self::BASE_URL) . $path;
+        
+        if (count($query)) {
+            $url .= '?' . http_build_query($query);
+        }
+        return $url;
     }
     
     protected function getDefaultHeaders($sendToken = true)
@@ -80,6 +89,7 @@ class Api
     /**
      *
      * @param Response $response
+     *
      * @return mixed
      */
     protected function getResponseData(Response $response)
@@ -136,6 +146,12 @@ class Api
         throw new \Exception('Not implemented');
     }
     
+    /**
+     * @param string $senderType
+     * @param string $fromCountry
+     *
+     * @return string[]
+     */
     public function getDestinationCountries($senderType, $fromCountry)
     {
         $response = $this->httpClient->get(
@@ -152,16 +168,29 @@ class Api
     }
     
     /**
-     * @param array $query
+     * @param LabelQuery $labelQuery
+     *
      * @return Label[]
      */
-    public function getLabels($query)
+    public function getLabels(LabelQuery $labelQuery)
     {
-        throw new \Exception('Not implemented');
+        $response = $this->httpClient->get(
+            $this->getUrl("labels"),
+            $this->getDefaultHeaders()
+            );
+        
+        $labels = [];
+        
+        foreach ($this->getResponseData($response) as $labelData) {
+            $labels[] = Label::fromDataArray($labelData);
+        }
+        
+        return $labels;
     }
     
     /**
      * @param LabelSpecification $labelSpecification
+     *
      * @return Label
      */
     public function createLabel(LabelSpecification $labelSpecification)
@@ -177,6 +206,7 @@ class Api
 
     /**
      * @param string $id
+     *
      * @return Label
      */
     public function getLabel($id)
@@ -188,20 +218,64 @@ class Api
         
         return Label::fromDataArray($this->getResponseData($response));
     }
-    
-    public function getParcelTypes($senderType, $fromCountry, $query = [])
+
+    /**
+     * @param string $senderType
+     * @param string $fromCountry
+     * @param ParcelQuery $parcelQuery
+     *
+     * @return ParcelType[]
+     */
+    public function getParcelTypes($senderType, $fromCountry, ParcelQuery $parcelQuery = null)
     {
-        throw new \Exception('Not implemented');
+        $response = $this->httpClient->get(
+            $this->getUrl("parcel-types/$senderType/$fromCountry", $parcelQuery ? $parcelQuery->toDataArray() : []),
+            $this->getDefaultHeaders()
+            );
+        
+        $parcelTypes = [];
+        
+        foreach ($this->getResponseData($response) as $parcelTypeData) {
+            $parcelTypes[] = ParcelType::fromDataArray($parcelTypeData);
+        }
+        
+        return $parcelTypes;
     }
     
-    public function getProducts($query = [])
+    /**
+     * @param ProductQuery $productQuery
+     *
+     * @return Product[]
+     */
+    public function getProducts(ProductQuery $productQuery = null)
     {
-        throw new \Exception('Not implemented');
+        $response = $this->httpClient->get(
+            $this->getUrl("products", $productQuery ? $productQuery->toDataArray() : []),
+            $this->getDefaultHeaders()
+            );
+        
+        $products = [];
+        print_r($response);
+        foreach ($this->getResponseData($response) as $productData) {
+            $products[] = Product::fromDataArray($productData);
+        }
+        
+        return $products;
     }
     
+    /**
+     * @param string $productKey
+     *
+     * @return Product
+     */
     public function getProduct($productKey)
     {
-        throw new \Exception('Not implemented');
+        $response = $this->httpClient->get(
+            $this->getUrl("products/$productKey"),
+            $this->getDefaultHeaders()
+            );
+        
+        return Product::fromDataArray($this->getResponseData($response));
     }
     
     public function getShipmentOptions($senderType)
