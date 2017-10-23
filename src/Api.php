@@ -14,6 +14,9 @@ use ShipCore\DHLParcel\Entity\ParcelTypes\Request\ParcelQuery;
 use ShipCore\DHLParcel\Entity\ParcelTypes\Response\ParcelType;
 use ShipCore\DHLParcel\Entity\Products\Request\ProductQuery;
 use ShipCore\DHLParcel\Entity\Products\Response\Product;
+use ShipCore\DHLParcel\Entity\ShipmentOptions\Response\ShipmentOption;
+use ShipCore\DHLParcel\Entity\Capabilities\Request\CapabilityQuery;
+use ShipCore\DHLParcel\Entity\Capabilities\Response\Capability;
 
 class Api
 {
@@ -55,6 +58,7 @@ class Api
         if (count($query)) {
             $url .= '?' . http_build_query($query);
         }
+        
         return $url;
     }
     
@@ -141,9 +145,20 @@ class Api
         return $this->isTokenChanged ? $this->token : null;
     }
     
-    public function getCapabilities($senderType, $query = [])
+    public function getCapabilities($senderType, CapabilityQuery $capabilityQuery = null)
     {
-        throw new \Exception('Not implemented');
+        $response = $this->httpClient->get(
+            $this->getUrl("capabilities/$senderType", $capabilityQuery ? $capabilityQuery->toDataArray() : []),
+            $this->getDefaultHeaders()
+            );
+        
+        $capabilities = [];
+        
+        foreach ($this->getResponseData($response) as $capabilityData) {
+            $capabilities[] = Capability::fromDataArray($capabilityData);
+        }
+        
+        return $capabilities;
     }
     
     /**
@@ -280,7 +295,18 @@ class Api
     
     public function getShipmentOptions($senderType)
     {
-        throw new \Exception('Not implemented');
+        $response = $this->httpClient->get(
+            $this->getUrl("shipment-options/$senderType"),
+            $this->getDefaultHeaders()
+            );
+        
+        $shipmentOptions = [];
+        
+        foreach ($this->getResponseData($response) as $shipmentOptionsData) {
+            $shipmentOptions[] = ShipmentOption::fromDataArray($shipmentOptionsData);
+        }
+        
+        return $shipmentOptions;
     }
     
     public function getTimeWindows($query =[])
