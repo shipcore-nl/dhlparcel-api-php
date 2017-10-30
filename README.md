@@ -1,4 +1,4 @@
-# DHL Parcel PHP Bindings
+# DHL Parcel API PHP Bindings
 
 PHP Library to use DHL Parcel API as documented on https://api-gw.dhlparcel.nl/docs/.
 
