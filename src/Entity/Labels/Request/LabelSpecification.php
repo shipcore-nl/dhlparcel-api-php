@@ -53,7 +53,7 @@ class LabelSpecification extends DataObject
     /**
      * @Required()
      * @Accessible()
-     * @var \ShipCore\DHLParcel\Entity\Option[]
+     * @var \ShipCore\DHLParcel\Entity\Labels\Request\Option[]
      */
     protected $options;
     
