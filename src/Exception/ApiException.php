@@ -11,9 +11,7 @@ class ApiException extends \Exception
     private $response;
     
     public function __construct($message, Response $response, \Throwable $previous = null)
-    {
-        print_r($response);
-        
+    {     
         $this->response = $response;
         parent::__construct($message, 0, $previous);
     }
