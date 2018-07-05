@@ -12,4 +12,11 @@ class Option extends DataObject
      * @var string
      */
     protected $key;
+    
+     /**
+     *
+     * @Accessible()
+     * @var string
+     */
+    protected $input;
 }
