@@ -12,7 +12,7 @@
     },
     "autoload": {
         "psr-4": {
-            "ShipCore\\DHLParcel1\\": "src"
+            "ShipCore\\DHLParcel\\": "src/"
         }
     }
 }
