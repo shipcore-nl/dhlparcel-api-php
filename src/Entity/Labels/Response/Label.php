@@ -61,4 +61,11 @@ class Label extends DataObject
      * @var string
      */
     protected $pdf;
+    
+        /**
+     *
+     * @Accessible()
+     * @var string
+     */
+    protected $zpl;
 }
