@@ -14,6 +14,13 @@ class LabelSpecification extends DataObject
      */
     protected $labelId;
     
+     /**
+     *
+     * @Accessible()
+     * @var string
+     */
+    protected $labelFormat;
+    
     /**
      *
      * @Accessible()
